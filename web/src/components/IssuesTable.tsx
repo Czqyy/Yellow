@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import type { IssueSummary } from "@/../github/github";
 import {
   Table,
@@ -11,6 +12,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 type IssueWithRepo = IssueSummary & { repo: string };
 
@@ -20,6 +29,17 @@ type Props = {
 };
 
 export default function IssuesTable({ issues, org }: Props) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  // Calculate pagination
+  const totalPages = Math.ceil(issues.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentIssues = useMemo(() => 
+    issues.slice(startIndex, endIndex), 
+    [issues, startIndex, endIndex]
+  );
 
   // Generate random bounty amount based on issue type and priority
   const generateBounty = (issue: IssueWithRepo) => {
@@ -96,7 +116,7 @@ export default function IssuesTable({ issues, org }: Props) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {issues.map((issue) => {
+            {currentIssues.map((issue) => {
               const taskType = getTaskType(issue.labels);
               return (
                 <TableRow key={issue.id}>
@@ -180,9 +200,71 @@ export default function IssuesTable({ issues, org }: Props) {
         </Table>
       </div>
 
-      {issues.length === 0 && (
+      {issues.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           No issues found.
+        </div>
+      ) : (
+        <div className="flex flex-col items-center space-y-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(endIndex, issues.length)} of {issues.length} issues
+          </div>
+          
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) setCurrentPage(currentPage - 1);
+                    }}
+                    className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(pageNum);
+                        }}
+                        isActive={currentPage === pageNum}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    href="#" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                    }}
+                    className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
         </div>
       )}
     </div>
