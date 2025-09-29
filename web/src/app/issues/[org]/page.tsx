@@ -2,12 +2,12 @@ import { getOpenIssuesByRepo } from '@/../github/github';
 import IssuesTable from '../../../components/IssuesTable';
 
 type Props = {
-  params: { org: string };
+  params: Promise<{ org: string }>;
 };
 
 // Server component with dynamic org routing
 export default async function OrgIssuesPage({ params }: Props) {
-  const { org } = params;
+  const { org } = await params;
   const token = process.env.GITHUB_TOKEN; // server-side only
 
   // Fetch issues grouped by repo (public only, with PAT for rate limits)
@@ -41,8 +41,9 @@ export default async function OrgIssuesPage({ params }: Props) {
 }
 
 export async function generateMetadata({ params }: Props) {
+  const { org } = await params;
   return {
-    title: `${params.org} Issues`,
-    description: `Open issues for ${params.org} organization`,
+    title: `${org} Issues`,
+    description: `Open issues for ${org} organization`,
   };
 }
