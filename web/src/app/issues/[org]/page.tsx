@@ -23,11 +23,11 @@ export default async function OrgIssuesPage({ params }: Props) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-gray-950">
       <div className="container mx-auto py-6 px-4">
         <div className="space-y-6">
           <div className="flex flex-col space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back!</h1>
             <p className="text-muted-foreground">
               Here's a list of issues for {org} organization.
             </p>
