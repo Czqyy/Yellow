@@ -220,6 +220,8 @@ export async function getOpenIssuesByRepo(
 	const workers = Array.from({ length: Math.min(poolSize, filtered.length) }, () => worker());
 	await Promise.all(workers);
 
+    console.log(result)
+
 	return result;
 }
 
