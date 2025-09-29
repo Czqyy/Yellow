@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  repository  String   // GitHub repository URL
+  owner       String   // Ethereum address of project owner
+  token       String?  // ERC20 token address for payments
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  channels Channel[]
+  contributions Contribution[]
+
+  @@map("projects")
+}
+
+model Channel {
+  id           String   @id @default(cuid())
+  projectId    String
+  contributor  String   // Ethereum address of contributor
+  channelAddress String // Smart contract address
+  token        String   // ERC20 token address
+  ownerBalance BigInt   @default(0)
+  contributorBalance BigInt @default(0)
+  nonce        BigInt   @default(0)
+  isFinalized  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+  contributions Contribution[]
+
+  @@unique([projectId, contributor])
+  @@map("channels")
+}
+
+model Contribution {
+  id          String   @id @default(cuid())
+  projectId   String
+  channelId   String
+  contributor String   // Ethereum address
+  type        ContributionType
+  title       String
+  description String?
+  amount      BigInt   // Payment amount in wei
+  status      ContributionStatus @default(PENDING)
+  githubUrl   String?  // Link to GitHub PR/issue
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
+  channel Channel @relation(fields: [channelId], references: [id])
+
+  @@map("contributions")
+}
+
+enum ContributionType {
+  BUG_FIX
+  FEATURE
+  DOCUMENTATION
+  TRANSLATION
+  TEST
+  REFACTOR
+  OTHER
+}
+
+enum ContributionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
